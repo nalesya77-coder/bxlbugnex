@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BXL WhatsApp Hub — Devil Aura Edition v5.0</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Plus Jakarta Sans & Orbitron -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK (Compat v10 for lightweight Realtime DB) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        blood: {
+                            red: '#ff003c',
+                            dark: '#080103',
+                            glow: '#ff1e56',
+                            crimson: '#800020'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        tech: ['Orbitron', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'devil-sm': '0 0 10px rgba(255, 0, 60, 0.4)',
+                        'devil-md': '0 0 20px rgba(255, 0, 60, 0.6)',
+                        'devil-lg': '0 0 35px rgba(255, 0, 60, 0.8)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Lightweight Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        @keyframes devilPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.9; }
+        }
+
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-devil-pulse { animation: devilPulse 2.5s ease-in-out infinite; }
+
+        #particle-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #080103; }
+        ::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 3px; }
+
+        .glass-devil {
+            background: rgba(12, 2, 5, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 0, 60, 0.3);
+        }
+
+        .devil-text-glow {
+            color: #ffe4e6;
+            text-shadow: 0 0 8px rgba(255, 0, 60, 0.8), 0 0 18px rgba(255, 30, 86, 0.5);
+        }
+
+        /* Dynamic Custom Background Layer */
+        #customBgLayer {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.25;
+            transition: opacity 0.5s ease, background-image 0.5s ease;
+        }
+    </style>
+</head>
+<body class="bg-[#080103] text-slate-100 font-sans min-h-screen flex flex-col justify-between selection:bg-red-600 selection:text-white relative overflow-x-hidden">
+
+    <!-- Custom Dynamic Background Image Layer -->
+    <div id="customBgLayer"></div>
+
+    <!-- Canvas Lightweight Flame Embers -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Ambient Glow Orbs -->
+    <div class="fixed top-[-80px] left-1/2 -translate-x-1/2 w-[350px] h-[350px] bg-red-600/15 rounded-full blur-[120px] pointer-events-none z-0 animate-devil-pulse"></div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="mainAppContainer" class="relative z-10 max-w-3xl mx-auto px-4 py-6 md:py-10 w-full space-y-6">
+
+        <!-- ANNOUNCEMENT MARQUEE TICKER (REALTIME FROM OWNER) -->
+        <div id="announcementBox" class="hidden glass-devil px-4 py-2 rounded-xl border border-red-600/40 text-xs text-red-300 flex items-center gap-3 overflow-hidden shadow-devil-sm">
+            <span class="px-2 py-0.5 rounded bg-red-950 text-blood-glow font-bold text-[10px] uppercase font-tech shrink-0"><i class="fa-solid fa-bullhorn animate-bounce"></i> INFO</span>
+            <marquee id="announcementText" class="font-medium text-slate-200">Selamat datang di BXL Bug Hub Official!</marquee>
+        </div>
+
+        <!-- HEADER & HERO -->
+        <header class="text-center space-y-4">
+            <div class="relative inline-block">
+                <div class="absolute -inset-1 bg-gradient-to-r from-blood-red via-red-600 to-amber-600 rounded-full blur opacity-75 animate-pulse"></div>
+                <div class="relative w-28 h-28 md:w-36 md:h-36 rounded-full p-1 bg-[#0a0204] overflow-hidden border-2 border-blood-red/80">
+                    <img id="webLogo" src="https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=400&auto=format&fit=crop" 
+                         alt="BXL Logo" 
+                         class="w-full h-full object-cover rounded-full"
+                         onerror="this.src='https://placehold.co/300x300/1a0205/ff003c?text=DEVIL+BXL'">
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-950/80 border border-red-500/40 text-blood-glow text-[11px] font-semibold uppercase tracking-widest backdrop-blur-md">
+                    <i class="fa-solid fa-fire text-red-500"></i> DEVIL AURA SYSTEM V5.0
+                </div>
+                <h1 id="webTitle" class="text-2xl md:text-4xl font-extrabold font-tech tracking-wider devil-text-glow uppercase">
+                    🔥 BXL BUG WHATSAPP
+                </h1>
+                <p id="webDesc" class="text-slate-400 text-xs md:text-sm max-w-md mx-auto leading-relaxed">
+                    Layanan BXL Bug WhatsApp tercepat, ringan, dan tersinkronisasi realtime.
+                </p>
+            </div>
+
+            <!-- Admin Access Button -->
+            <div>
+                <button onclick="playBtnSound(); openAdminLoginModal()" class="px-4 py-2 rounded-xl bg-red-950/80 hover:bg-red-900 border border-red-600/50 text-red-400 text-xs font-tech font-bold uppercase tracking-wider shadow-devil-sm transition duration-200 inline-flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>ADMIN PANEL OWNER</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN BUG EXECUTION FORM -->
+        <section class="glass-devil p-5 md:p-7 rounded-2xl shadow-devil-md relative space-y-6">
+            <div class="flex items-center justify-between border-b border-red-600/30 pb-3">
+                <h2 class="text-base md:text-lg font-extrabold font-tech text-white flex items-center gap-2.5">
+                    <i class="fa-solid fa-bug text-blood-glow text-xl"></i>
+                    PANEL EKSEKUSI BUG
+                </h2>
+                <span class="text-[10px] bg-red-950 text-red-400 px-2.5 py-1 rounded-full border border-red-600/50 font-mono">v5.0 Fast Mode</span>
+            </div>
+
+            <form id="bxlForm" onsubmit="handleSubmit(event)" class="space-y-5">
+                
+                <!-- Target Input (Number / Group Link / Channel) -->
+                <div class="space-y-2">
+                    <label id="targetLabel" for="targetInput" class="block text-xs md:text-sm font-semibold text-slate-200">
+                        Masukkan Nomor Target / Link Target
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-red-500 text-sm">
+                            <i id="targetIcon" class="fa-solid fa-phone"></i>
+                        </div>
+                        <input type="text" 
+                               id="targetInput" 
+                               name="targetInput"
+                               placeholder="Contoh: 628xxxxxxxxxx / Link" 
+                               required
+                               class="w-full pl-10 pr-4 py-3 bg-[#0a0204] border border-red-600/40 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blood-red focus:ring-1 focus:ring-red-600/50 transition font-mono text-xs md:text-sm">
+                    </div>
+                    <span id="targetError" class="hidden text-xs text-rose-400 font-medium flex items-center gap-1">
+                        <i class="fa-solid fa-circle-exclamation"></i> Format target tidak valid!
+                    </span>
+                </div>
+
+                <!-- Dynamic Bug Feature Options (Rendered from DB or Default) -->
+                <div class="space-y-2.5">
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                        ✦ PILIH JENIS & MODE BUG
+                    </label>
+                    <div id="bugFeaturesGrid" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <!-- Dynamic items loaded here -->
+                    </div>
+                </div>
+
+                <!-- Delay Mode Options -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                        ✦ PILIH KEKUATAN DELAY
+                    </label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="p-2.5 rounded-xl border border-red-600/30 bg-[#0a0204] text-center cursor-pointer hover:border-blood-red transition has-[:checked]:border-blood-red has-[:checked]:bg-red-950/60">
+                            <input type="radio" name="delayMode" value="DELAY HIGH" class="hidden" checked>
+                            <span class="block text-xs font-bold font-tech text-white">HIGH</span>
+                        </label>
+                        <label class="p-2.5 rounded-xl border border-red-600/30 bg-[#0a0204] text-center cursor-pointer hover:border-blood-red transition has-[:checked]:border-blood-red has-[:checked]:bg-red-950/60">
+                            <input type="radio" name="delayMode" value="DELAY HARD" class="hidden">
+                            <span class="block text-xs font-bold font-tech text-white">HARD</span>
+                        </label>
+                        <label class="p-2.5 rounded-xl border border-red-600/30 bg-[#0a0204] text-center cursor-pointer hover:border-blood-red transition has-[:checked]:border-blood-red has-[:checked]:bg-red-950/60">
+                            <input type="radio" name="delayMode" value="FORCE CLOSE" class="hidden">
+                            <span class="block text-xs font-bold font-tech text-white">CRASH</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" 
+                            onclick="playBtnSound()"
+                            class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-red-700 via-blood-red to-red-600 text-white font-bold font-tech text-sm md:text-base tracking-wider uppercase shadow-devil-md hover:shadow-devil-lg hover:scale-[1.01] active:scale-[0.99] transition duration-200 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-skull text-lg animate-bounce"></i>
+                        <span>EKSEKUSI BUG BXL NOW</span>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="text-center pt-4 border-t border-red-600/20 space-y-1.5">
+            <p class="text-xs font-tech text-blood-glow tracking-widest uppercase">
+                🔥 BXL BUG — DEVIL AURA V5.0
+            </p>
+            <p class="text-[11px] text-slate-500 font-mono">
+                Realtime Auto-Sync • Lightweight • Powered by BXL
+            </p>
+        </footer>
+
+    </div>
+
+    <!-- ================= MAINTENANCE SCREEN (WHEN CLOSED BY OWNER) ================= -->
+    <div id="maintenanceScreen" class="hidden fixed inset-0 bg-[#050103] z-40 flex flex-col items-center justify-center p-6 text-center space-y-6">
+        <div class="w-24 h-24 rounded-full bg-red-950/80 border-2 border-red-600 flex items-center justify-center text-4xl text-red-500 shadow-devil-lg animate-pulse">
+            <i class="fa-solid fa-screwdriver-wrench"></i>
+        </div>
+        <div class="space-y-2 max-w-md">
+            <h2 class="text-2xl font-bold font-tech text-blood-glow uppercase">WEBSITE DALAM PERBAIKAN / UPDATE</h2>
+            <p id="maintenanceMsg" class="text-xs md:text-sm text-slate-400 leading-relaxed">
+                Mohon maaf, website sedang ditutup sementara oleh Owner BXL untuk peningkatan sistem atau update fitur bug baru. Silakan kembali nanti!
+            </p>
+        </div>
+        <button onclick="playBtnSound(); openAdminLoginModal()" class="px-5 py-2.5 rounded-xl bg-red-950 border border-red-600 text-red-400 text-xs font-tech font-bold uppercase shadow-devil-sm">
+            <i class="fa-solid fa-lock mr-1"></i> MASUK KHUSUS OWNER
+        </button>
+    </div>
+
+    <!-- ================= ADMIN LOGIN MODAL ================= -->
+    <div id="adminLoginModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="glass-devil max-w-sm w-full rounded-2xl p-6 border border-red-600/60 shadow-devil-lg space-y-4">
+            <div class="flex items-center justify-between border-b border-red-600/30 pb-3">
+                <h3 class="text-sm font-bold font-tech text-blood-glow flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-red-500"></i> LOGIN OWNER BXL
+                </h3>
+                <button onclick="playBtnSound(); closeAdminLoginModal()" class="text-slate-400 hover:text-white text-base"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleAdminLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Password Server Admin</label>
+                    <input type="password" id="adminPasswordInput" placeholder="Masukkan password..." required
+                           class="w-full px-3.5 py-2.5 bg-[#0a0204] border border-red-600/50 rounded-xl text-white text-xs focus:outline-none focus:border-blood-red">
+                </div>
+                <div id="loginError" class="hidden text-xs text-rose-500 font-medium"><i class="fa-solid fa-triangle-exclamation"></i> Password salah!</div>
+                <button type="submit" onclick="playBtnSound()" class="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-tech font-bold text-xs uppercase shadow-devil-sm">
+                    MASUK ADMIN PANEL
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= FULL CONTROL ADMIN PANEL MODAL ================= -->
+    <div id="adminPanelModal" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-50 flex flex-col opacity-0 pointer-events-none transition-opacity duration-300 overflow-y-auto">
+        <div class="max-w-3xl mx-auto w-full px-4 py-6 space-y-5">
+            
+            <!-- Admin Header -->
+            <div class="flex items-center justify-between glass-devil p-4 rounded-2xl border border-red-600/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-red-950 border border-red-600 flex items-center justify-center text-red-500 text-lg">
+                        <i class="fa-solid fa-user-gear"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold font-tech text-white">ADMIN PANEL OWNER</h2>
+                        <p class="text-[11px] text-slate-400">Sinkronisasi Otomatis Ke Semua Pengguna</p>
+                    </div>
+                </div>
+                <button onclick="playBtnSound(); closeAdminPanel()" class="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold font-tech">
+                    <i class="fa-solid fa-right-from-bracket"></i> KELUAR
+                </button>
+            </div>
+
+            <!-- TAB 1: WEBSITE STATUS (CLOSE WEB / MAINTENANCE MODE) -->
+            <div class="glass-devil p-5 rounded-2xl border border-red-600/40 space-y-3">
+                <h3 class="text-xs font-bold font-tech text-blood-glow flex items-center gap-2 uppercase tracking-wider">
+                    <i class="fa-solid fa-power-off text-red-500"></i> 1. FITUR TUTUP WEB / MAINTENANCE MODE
+                </h3>
+                <p class="text-xs text-slate-400">Jika diaktifkan, seluruh pengguna tidak dapat membuka web (hanya Owner yang bisa masuk).</p>
+                <div class="flex items-center justify-between p-3 bg-black/50 rounded-xl border border-red-600/20">
+                    <span class="text-xs font-bold text-slate-200">Status Akses Web:</span>
+                    <button id="toggleMaintenanceBtn" onclick="toggleMaintenanceMode()" class="px-4 py-1.5 rounded-lg font-tech font-bold text-xs bg-emerald-600 text-white">
+                        WEB BUKA (NORMAL)
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB 2: TAMBAH MENU BUG BARU (BUG GRUP, BUG CH, DLL) -->
+            <div class="glass-devil p-5 rounded-2xl border border-red-600/40 space-y-4">
+                <h3 class="text-xs font-bold font-tech text-blood-glow flex items-center gap-2 uppercase tracking-wider">
+                    <i class="fa-solid fa-plus-circle text-red-500"></i> 2. TAMBAH / KELOLA FITUR BUG BARU
+                </h3>
+                <p class="text-xs text-slate-400">Tambah fitur bug baru seperti Bug Group, Bug Channel, Bug Call. Otomatis tampil di web user.</p>
+
+                <form onsubmit="handleAddBugFeature(event)" class="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-black/50 rounded-xl border border-red-600/20">
+                    <div>
+                        <label class="block text-[11px] text-slate-300 font-semibold mb-1">Nama Fitur Bug</label>
+                        <input type="text" id="newBugTitle" placeholder="Contoh: BUG GROUP VIP" required class="w-full px-3 py-2 bg-[#0a0204] border border-red-600/40 rounded-lg text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-300 font-semibold mb-1">Ikon FontAwesome</label>
+                        <select id="newBugIcon" class="w-full px-3 py-2 bg-[#0a0204] border border-red-600/40 rounded-lg text-xs text-white">
+                            <option value="fa-users">Grup (fa-users)</option>
+                            <option value="fa-bullhorn">Channel / Saluran (fa-bullhorn)</option>
+                            <option value="fa-phone">Telepon (fa-phone)</option>
+                            <option value="fa-mobile-screen">Nomor / Kontak (fa-mobile-screen)</option>
+                            <option value="fa-bolt">Spam Fast (fa-bolt)</option>
+                        </select>
+                    </div>
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="block text-[11px] text-slate-300 font-semibold mb-1">Deskripsi Singkat Fitur</label>
+                        <input type="text" id="newBugDesc" placeholder="Deskripsi kerja bug..." required class="w-full px-3 py-2 bg-[#0a0204] border border-red-600/40 rounded-lg text-xs text-white">
+                    </div>
+                    <div class="col-span-1 md:col-span-2">
+                        <button type="submit" onclick="playBtnSound()" class="w-full py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-tech font-bold uppercase shadow-devil-sm">
+                            <i class="fa-solid fa-plus mr-1"></i> SIMPAN FITUR BUG BARU
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Daftar Bug Active -->
+                <div class="space-y-2">
+                    <div class="text-[11px] font-bold text-slate-400 uppercase">Daftar Fitur Bug Aktif Saat Ini:</div>
+                    <div id="adminBugList" class="space-y-2 max-h-48 overflow-y-auto">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: GANTI FOTO BACKGROUND BEKANG MENU (ALBUM / GALLERY) -->
+            <div class="glass-devil p-5 rounded-2xl border border-red-600/40 space-y-4">
+                <h3 class="text-xs font-bold font-tech text-blood-glow flex items-center gap-2 uppercase tracking-wider">
+                    <i class="fa-solid fa-image text-red-500"></i> 3. GANTI FOTO BACKGROUND & ASET WEB
+                </h3>
+                <p class="text-xs text-slate-400">Unggah foto dari galeri/album HP Anda untuk dijadikan background web seluruh pengguna.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="p-3 bg-black/50 rounded-xl border border-red-600/20 space-y-2">
+                        <label class="block text-xs font-semibold text-slate-200">Foto Background Belakang Menu</label>
+                        <input type="file" id="uploadBgImage" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-red-950 file:text-red-400">
+                        <button onclick="playBtnSound(); uploadBgFromDevice()" class="w-full py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold">Terapkan Background</button>
+                    </div>
+                    <div class="p-3 bg-black/50 rounded-xl border border-red-600/20 space-y-2">
+                        <label class="block text-xs font-semibold text-slate-200">Foto Logo Profile Web</label>
+                        <input type="file" id="uploadLogoImage" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-red-950 file:text-red-400">
+                        <button onclick="playBtnSound(); uploadLogoFromDevice()" class="w-full py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold">Simpan Logo</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: PENGUMUMAN MARQUEE RUNNING TEXT -->
+            <div class="glass-devil p-5 rounded-2xl border border-red-600/40 space-y-3">
+                <h3 class="text-xs font-bold font-tech text-blood-glow flex items-center gap-2 uppercase tracking-wider">
+                    <i class="fa-solid fa-scroll text-red-500"></i> 4. TEXT PENGUMUMAN BERJALAN (MARQUEE)
+                </h3>
+                <div class="flex gap-2">
+                    <input type="text" id="inputAnnouncement" placeholder="Masukkan pesan pengumuman..." class="w-full px-3 py-2 bg-[#0a0204] border border-red-600/40 rounded-lg text-xs text-white">
+                    <button onclick="playBtnSound(); saveAnnouncement()" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold shrink-0">Simpan</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- NOTIFICATION MODAL -->
+    <div id="statusModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="glass-devil max-w-xs md:max-w-sm w-full rounded-2xl p-5 border border-red-600/50 text-center space-y-3 shadow-devil-lg transform scale-95 transition-transform duration-300" id="modalContent">
+            <div id="modalIcon" class="w-12 h-12 mx-auto rounded-full bg-red-950 border border-red-600 flex items-center justify-center text-xl text-red-500">
+                <i class="fa-solid fa-spinner animate-spin"></i>
+            </div>
+            <h3 id="modalTitle" class="text-base font-bold font-tech text-white">Memproses...</h3>
+            <p id="modalBody" class="text-xs text-slate-300 leading-relaxed">Menyiapkan data...</p>
+            <div id="modalActions" class="pt-2 flex justify-center gap-2 hidden">
+                <button onclick="playBtnSound(); closeModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300">Batal</button>
+                <a id="redirectWaBtn" href="#" target="_blank" onclick="playBtnSound(); closeModal()" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-xs font-bold text-white flex items-center gap-1.5">
+                    <i class="fa-brands fa-whatsapp text-sm"></i><span>Kirim Ke WA</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT & REALTIME LOGIC -->
+    <script>
+        // --- REALTIME DATABASE INITIALIZATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBXL_DEVIL_AURA_V5_DEMO",
+            authDomain: "bxl-devil-aura-v5.firebaseapp.com",
+            databaseURL: "https://bxl-devil-aura-default-rtdb.firebaseio.com",
+            projectId: "bxl-devil-aura-v5"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+
+        const botNumber = "6283129970042";
+        let isMaintenanceActive = false;
+
+        // --- SOUND EFFECTS (SYNTHESIZED AUDIO) ---
+        function playBtnSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.08);
+            } catch(e) {}
+        }
+
+        // --- LIGHTWEIGHT CANVAS PARTICLES ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Ember {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + 10;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedY = Math.random() * 1.2 + 0.3;
+                this.alpha = Math.random() * 0.6 + 0.2;
+            }
+            update() {
+                this.y -= this.speedY;
+                if (this.y < 0) this.reset();
+            }
+            draw() {
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = '#ff003c';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            resizeCanvas();
+            particles = [];
+            for (let i = 0; i < 25; i++) particles.push(new Ember());
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // --- REALTIME DATABASE SYNC ---
+        window.onload = function() {
+            initParticles();
+            animateParticles();
+            listenRealtimeDatabase();
+        };
+
+        // Fallback local memory array to ensure bugs render seamlessly even offline
+        let localBugFeatures = {
+            "default_1": { title: "BUG NUMBER VIP", icon: "fa-mobile-screen", desc: "Spam delay nomor target." },
+            "default_2": { title: "BUG GROUP ULTRA", icon: "fa-users", desc: "Spam/Delay ke grup WhatsApp." },
+            "default_3": { title: "BUG CHANNEL / SALURAN", icon: "fa-bullhorn", desc: "Laporan otomatis saluran target." }
+        };
+
+        function listenRealtimeDatabase() {
+            // Settings Sync (Title, Description, Logo, BgImage, Maintenance, Announcement)
+            db.ref('v5_settings').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    if (data.logo) document.getElementById('webLogo').src = data.logo;
+                    if (data.bgImage) {
+                        document.getElementById('customBgLayer').style.backgroundImage = `url('${data.bgImage}')`;
+                    }
+                    if (data.announcement) {
+                        document.getElementById('announcementBox').classList.remove('hidden');
+                        document.getElementById('announcementText').innerText = data.announcement;
+                    }
+                    
+                    // Maintenance Toggle Handler
+                    isMaintenanceActive = !!data.isClosed;
+                    const maintScreen = document.getElementById('maintenanceScreen');
+                    const toggleBtn = document.getElementById('toggleMaintenanceBtn');
+
+                    if (isMaintenanceActive) {
+                        maintScreen.classList.remove('hidden');
+                        if (toggleBtn) {
+                            toggleBtn.innerText = "WEB DITUTUP (MAINTENANCE)";
+                            toggleBtn.className = "px-4 py-1.5 rounded-lg font-tech font-bold text-xs bg-rose-600 text-white";
+                        }
+                    } else {
+                        maintScreen.classList.add('hidden');
+                        if (toggleBtn) {
+                            toggleBtn.innerText = "WEB BUKA (NORMAL)";
+                            toggleBtn.className = "px-4 py-1.5 rounded-lg font-tech font-bold text-xs bg-emerald-600 text-white";
+                        }
+                    }
+                }
+            });
+
+            // Bug Features Sync (Dynamic Bug Features)
+            db.ref('v5_bug_features').on('value', (snapshot) => {
+                const bugsObj = snapshot.val();
+                if (bugsObj && Object.keys(bugsObj).length > 0) {
+                    localBugFeatures = bugsObj;
+                }
+                renderBugFeatures(localBugFeatures);
+                renderAdminBugList(localBugFeatures);
+            }, (error) => {
+                // If offline or DB fails, render local memory bugs
+                renderBugFeatures(localBugFeatures);
+                renderAdminBugList(localBugFeatures);
+            });
+        }
+
+        // Render Dynamic Bug Features on User View
+        function renderBugFeatures(bugsObj) {
+            const grid = document.getElementById('bugFeaturesGrid');
+            
+            if (!bugsObj || Object.keys(bugsObj).length === 0) {
+                bugsObj = localBugFeatures;
+            }
+
+            let html = '';
+            let isFirst = true;
+            Object.keys(bugsObj).forEach(key => {
+                const bug = bugsObj[key];
+                html += `
+                    <label class="relative flex flex-col p-3 rounded-xl border border-red-600/30 bg-[#0a0204] cursor-pointer hover:border-blood-red transition group has-[:checked]:border-blood-red has-[:checked]:bg-red-950/60 shadow-devil-sm">
+                        <div class="flex items-center justify-between mb-1">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid ${bug.icon || 'fa-bug'} text-red-500 text-sm"></i>
+                                <span class="font-bold font-tech text-white text-xs">${bug.title}</span>
+                            </div>
+                            <input type="radio" name="bugType" value="${bug.title}" class="w-3.5 h-3.5 text-red-600 border-red-500" ${isFirst ? 'checked' : ''}>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-tight">${bug.desc}</p>
+                    </label>
+                `;
+                isFirst = false;
+            });
+            grid.innerHTML = html;
+        }
+
+        // Render Bug List in Admin
+        function renderAdminBugList(bugsObj) {
+            const list = document.getElementById('adminBugList');
+            if (!bugsObj || Object.keys(bugsObj).length === 0) {
+                list.innerHTML = `<div class="text-xs text-slate-500">Belum ada bug custom ditambahkan.</div>`;
+                return;
+            }
+            let html = '';
+            Object.keys(bugsObj).forEach(key => {
+                const bug = bugsObj[key];
+                html += `
+                    <div class="flex items-center justify-between p-2.5 bg-black/60 rounded-xl border border-red-600/20 text-xs">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid ${bug.icon || 'fa-bug'} text-red-500"></i>
+                            <div>
+                                <div class="font-bold font-tech text-white">${bug.title}</div>
+                                <div class="text-[10px] text-slate-400">${bug.desc}</div>
+                            </div>
+                        </div>
+                        <button onclick="playBtnSound(); deleteBugFeature('${key}')" class="px-2 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded text-[10px] font-bold">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        // --- ADMIN AUTHENTICATION (PASSWORD: 9118182727) ---
+        function openAdminLoginModal() {
+            document.getElementById('adminLoginModal').classList.remove('opacity-0', 'pointer-events-none');
+        }
+        function closeAdminLoginModal() {
+            document.getElementById('adminLoginModal').classList.add('opacity-0', 'pointer-events-none');
+        }
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const pass = document.getElementById('adminPasswordInput').value;
+            // Strictly set to: 9118182727
+            if (pass === '9118182727') {
+                document.getElementById('adminPasswordInput').value = '';
+                document.getElementById('loginError').classList.add('hidden');
+                closeAdminLoginModal();
+                openAdminPanel();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function openAdminPanel() {
+            document.getElementById('adminPanelModal').classList.remove('opacity-0', 'pointer-events-none');
+        }
+        function closeAdminPanel() {
+            document.getElementById('adminPanelModal').classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        // --- ADMIN PANEL CONTROLS ---
+
+        // 1. Toggle Maintenance
+        function toggleMaintenanceMode() {
+            const newStatus = !isMaintenanceActive;
+            db.ref('v5_settings/isClosed').set(newStatus).then(() => {
+                alert(newStatus ? 'Web berhasil ditutup (Mode Maintenance Aktif).' : 'Web berhasil dibuka kembali untuk publik.');
+            }).catch(() => {
+                isMaintenanceActive = newStatus;
+                alert('Status Maintenance berhasil diubah!');
+            });
+        }
+
+        // 2. Add New Bug Feature
+        function handleAddBugFeature(e) {
+            e.preventDefault();
+            const title = document.getElementById('newBugTitle').value.trim();
+            const icon = document.getElementById('newBugIcon').value;
+            const desc = document.getElementById('newBugDesc').value.trim();
+
+            if (!title || !desc) {
+                alert('Harap isi judul dan deskripsi fitur bug!');
+                return;
+            }
+
+            const newKey = "bug_" + Date.now();
+            const newBug = { title, icon, desc };
+
+            // Save to local state immediately
+            localBugFeatures[newKey] = newBug;
+            renderBugFeatures(localBugFeatures);
+            renderAdminBugList(localBugFeatures);
+
+            // Save to Firebase Realtime Database
+            db.ref('v5_bug_features/' + newKey).set(newBug).then(() => {
+                alert('Fitur Bug baru berhasil ditambahkan dan langsung aktif di semua user!');
+            }).catch((err) => {
+                alert('Fitur Bug baru berhasil ditambahkan ke tampilan!');
+            });
+
+            document.getElementById('newBugTitle').value = '';
+            document.getElementById('newBugDesc').value = '';
+        }
+
+        function deleteBugFeature(key) {
+            if (confirm('Hapus fitur bug ini dari seluruh user?')) {
+                delete localBugFeatures[key];
+                renderBugFeatures(localBugFeatures);
+                renderAdminBugList(localBugFeatures);
+                db.ref('v5_bug_features/' + key).remove();
+            }
+        }
+
+        // 3. Upload Background Image from Album/Gallery
+        function uploadBgFromDevice() {
+            const input = document.getElementById('uploadBgImage');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('customBgLayer').style.backgroundImage = `url('${e.target.result}')`;
+                    db.ref('v5_settings/bgImage').set(e.target.result).then(() => {
+                        alert('Foto Background berhasil diperbarui di seluruh perangkat!');
+                    });
+                }
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                alert('Pilih foto background dari galeri terlebih dahulu.');
+            }
+        }
+
+        // 4. Upload Logo Image
+        function uploadLogoFromDevice() {
+            const input = document.getElementById('uploadLogoImage');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('webLogo').src = e.target.result;
+                    db.ref('v5_settings/logo').set(e.target.result).then(() => {
+                        alert('Foto Logo berhasil diperbarui!');
+                    });
+                }
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                alert('Pilih foto logo terlebih dahulu.');
+            }
+        }
+
+        // 5. Save Announcement
+        function saveAnnouncement() {
+            const text = document.getElementById('inputAnnouncement').value;
+            if (text) {
+                document.getElementById('announcementBox').classList.remove('hidden');
+                document.getElementById('announcementText').innerText = text;
+                db.ref('v5_settings/announcement').set(text).then(() => {
+                    alert('Pengumuman berjalan berhasil disimpan!');
+                });
+            }
+        }
+
+        // --- FORM SUBMISSION & AUTOMATIC WA REDIRECT EXECUTION ---
+        function handleSubmit(e) {
+            e.preventDefault();
+            const targetVal = document.getElementById('targetInput').value.trim();
+            const selectedBug = document.querySelector('input[name="bugType"]:checked')?.value || 'BUG NUMBER VIP';
+            const selectedDelay = document.querySelector('input[name="delayMode"]:checked').value;
+
+            if (!targetVal) {
+                document.getElementById('targetError').classList.remove('hidden');
+                return;
+            } else {
+                document.getElementById('targetError').classList.add('hidden');
+            }
+
+            showModal({
+                title: "MENGEKSEKUSI BUG BXL",
+                body: `Menyiapkan serangan ${selectedBug} (${selectedDelay}) ke target: ${targetVal}...`,
+                loading: true
+            });
+
+            // Prepare WhatsApp link
+            const messageText = `Halo Admin BXL Official,\nKonfirmasi Eksekusi Bug System:\n\n• Target: ${targetVal}\n• Jenis Bug: ${selectedBug}\n• Kekuatan Delay: ${selectedDelay}\n• System: Devil Aura v5.0 Active\n\nTerima kasih.`;
+            const encodedMsg = encodeURIComponent(messageText);
+            const waUrl = `https://wa.me/${botNumber}?text=${encodedMsg}`;
+
+            setTimeout(() => {
+                showModal({
+                    title: "MEMBUKA WHATSAPP...",
+                    body: "Eksekusi berhasil! Mengalihkan Anda secara otomatis ke WhatsApp...",
+                    loading: false,
+                    success: true,
+                    waUrl: waUrl
+                });
+
+                // AUTOMATIC REDIRECT TO WHATSAPP
+                window.open(waUrl, '_blank') || (window.location.href = waUrl);
+            }, 800);
+        }
+
+        function showModal({ title, body, loading, success, waUrl }) {
+            const modal = document.getElementById('statusModal');
+            const modalContent = document.getElementById('modalContent');
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalBody').innerText = body;
+            const modalIcon = document.getElementById('modalIcon');
+            const modalActions = document.getElementById('modalActions');
+
+            if (loading) {
+                modalIcon.innerHTML = `<i class="fa-solid fa-skull animate-spin text-red-500"></i>`;
+                modalActions.classList.add('hidden');
+            } else if (success) {
+                modalIcon.innerHTML = `<i class="fa-solid fa-circle-check text-red-500"></i>`;
+                modalActions.classList.remove('hidden');
+                document.getElementById('redirectWaBtn').href = waUrl;
+            }
+
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalContent.classList.remove('scale-95');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('statusModal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            document.getElementById('modalContent').classList.add('scale-95');
+        }
+    </script>
+</body>
+</html>
